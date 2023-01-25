@@ -1,10 +1,10 @@
 ///////////////////////////////////////////////////////
 // -*- mode : C++ -*-
-// EEPROM editor for M302K TK01
+// EEPROM editor for Q917
 //
 //[概要]
-//  スマ農塾で使用するM302K TK01のEEPROM領域の
-//                                初期化を行うプログラム
+//  DEN農01で使用するQ917のEEPROM領域の
+//                           初期化を行うプログラム
 //
 ///////////////////////////////////////////////////////
 
@@ -15,16 +15,17 @@ void setup(void) {
   unsigned int i,j,r,a,u;
   byte t,room;
   char c,name[8],z[4];
-  byte uecsid[6]={0x10,0x10,0x0c,0x00,0x00,0x0A},uecsrd[6];
-  byte macadd[6]={0x02,0xa2,0x73,0x0A,0xff,0xff};
-  byte data[] ={
-    'T',1,1,1,0,15,10,'I','n','A','i','r','T','e','m','p',0,
-    'H',1,1,1,0,15,10,'I','n','A','i','r','H','u','m','i','d',0,
-    'I',1,1,1,0,15,10,'I','n','I','l','l','u','m','i',0,
-    'c',1,1,1,0,29, 1,'c','n','d',0
-  };
+  byte uecsid[6]={0x10,0x10,0x0c,0x00,0x00,0x0C},uecsrd[6];
+  byte macadd[6]={0x02,0xa2,0x73,0x0C,0xff,0xff};
+  byte data[5][32];
+  data[0][] = {'T',1,1,1,0,15,10,'I','n','A','i','r','T','e','m','p',0};
+  data[1][] = {'H',1,1,1,0,15,10,'I','n','A','i','r','H','u','m','i','d',0};
+  data[2][] = {'R',1,1,1,0,15,10,'I','n','R','a','d','i','a','t','i','o','n',0};
+  data[3][] = {'C',1,1,1,0,15,10,'I','n','A','i','r','C','O','2',0};
+  data[4][] = {'c',1,1,1,0,29, 1,'c','n','d',0};
+
   Serial.begin(115200);
-  Serial.println("EEPROM SETTING for TK01 VER 0.03");
+  Serial.println("EEPROM SETTING for DENNOH01 VER 0.01");
   pinMode(3,INPUT_PULLUP);   // D400 RESET BUTTON
   delay(100);
   EEPROM.get(0x0,uecsrd);
