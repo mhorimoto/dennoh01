@@ -11,22 +11,24 @@
 #include <stdio.h>
 #include <EEPROM.h>
 
+#define SELEB  9
+
 void setup(void) {
   unsigned int i,j,r,a,u;
   byte t,room;
-  char c,name[8],z[4];
+  char c,name[8],z[4],txt[3];
   byte uecsid[6]={0x10,0x10,0x0c,0x00,0x00,0x0C},uecsrd[6];
   byte macadd[6]={0x02,0xa2,0x73,0x0C,0xff,0xff};
-  byte data[5][32];
-  data[0][] = {'T',1,1,1,0,15,10,'I','n','A','i','r','T','e','m','p',0};
-  data[1][] = {'H',1,1,1,0,15,10,'I','n','A','i','r','H','u','m','i','d',0};
-  data[2][] = {'R',1,1,1,0,15,10,'I','n','R','a','d','i','a','t','i','o','n',0};
-  data[3][] = {'C',1,1,1,0,15,10,'I','n','A','i','r','C','O','2',0};
-  data[4][] = {'c',1,1,1,0,29, 1,'c','n','d',0};
-
+  byte
+    data1[32] = {'T',1,1,1,0,15,10,'I','n','A','i','r','T','e','m','p',0},
+    data2[32] = {'H',1,1,1,0,15,10,'I','n','A','i','r','H','u','m','i','d',0},
+    data3[32] = {'R',1,1,1,0,15,10,'I','n','R','a','d','i','a','t','i','o','n',0},
+    data4[32] = {'C',1,1,1,0,15,10,'I','n','A','i','r','C','O','2',0},
+    data5[32] = {'c',1,1,1,0,29, 1,'c','n','d',0};
+  
   Serial.begin(115200);
-  Serial.println("EEPROM SETTING for DENNOH01 VER 0.01");
-  pinMode(3,INPUT_PULLUP);   // D400 RESET BUTTON
+  Serial.println("EEPROM SETTING for DENNOH01 VER 0.04");
+  pinMode(SELEB,INPUT); // SELE button
   delay(100);
   EEPROM.get(0x0,uecsrd);
   for(i=0;i<6;i++) {
@@ -37,7 +39,7 @@ void setup(void) {
       r = 0;  // 書き込まない
     }
   }
-  if (digitalRead(3)==LOW) {
+  if (digitalRead(SELEB)==LOW) {
     r = 1;
   }
   if (r==0) { // 書き込み済ならば表示だけを行って終了
@@ -101,29 +103,37 @@ void setup(void) {
   macadd[5] = (byte)(j & 0xff);
   Serial.print("MAC ADDRESS=");
   for(i=0;i<6;i++) {
-    Serial.print(macadd[i],HEX);
+    sprintf(txt,"%02X",macadd[i]);
+    Serial.print(txt);
     if (i<5) Serial.print(":");
   }
   Serial.println(); 
   EEPROM.put(0x6,macadd);
   Serial.print("MAC=");
   for(i=0;i<6;i++) {
-    Serial.print(EEPROM.read(6+i),HEX);
+    sprintf(txt,"%02X",EEPROM.read(6+i));
+    Serial.print(txt);
     if (i<5) Serial.print(":");
   }
-  room = (macadd[5]+30)&0x7f;
-  data[0x01] = room ; // InAirTemp
-  data[0x12] = room ; // InAirHumid
-  data[0x24] = room ; // InIllumi
-  data[0x34] = room ; // cnd
+  wrrec(data1,0x10);
+  wrrec(data2,0x30);
+  wrrec(data3,0x50);
+  wrrec(data4,0x70);
+  wrrec(data5,0x90);
+  //  room = (macadd[5]+30)&0x7f;
+  //  data[0x01] = room ; // InAirTemp
+  //  data[0x12] = room ; // InAirHumid
+  //  data[0x24] = room ; // InIllumi
+  //  data[0x34] = room ; // cnd
   Serial.println("");
-  EEPROM.put(0x10,data);
+  //  EEPROM.put(0x10,data);
   Serial.println("DATA WROTE");
   
   Serial.println("HEXDATA:");
-  for(j=0;j<5;j++) {
+  for(j=0;j<11;j++) {
     for(i=0;i<16;i++) {
-      Serial.print(EEPROM.read(i+(j*0x10)),HEX);
+      sprintf(txt,"%02X",EEPROM.read(i+(j*0x10)));
+      Serial.print(txt);
       if (i<15) Serial.print(",");
     }
     Serial.println();
@@ -131,6 +141,12 @@ void setup(void) {
   Serial.end();
 }
 
+
+void wrrec(byte d[],int a) {
+  for(int i=0;i<0x20;i++) {
+    EEPROM.write(a+i,d[i]);
+  }
+}
 
 void loop(void) {
 }
