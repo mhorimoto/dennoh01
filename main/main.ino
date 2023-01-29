@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////
-// M302K-TK01
+// Q917 UECS Simulator
 //  MIT License
-//  Copyright (c) 2021 Masafumi Horimoto
-//  Release on 03-Oct-2021
-//  https://github.com/mhorimoto/smanou01.git
+//  Copyright (c) 2023 Masafumi Horimoto
+//  Release on 30-Jan-2023
+//  https://github.com/mhorimoto/dennoh01.git
 ///////////////////////////////////////////////////////////////////
 
 
@@ -16,9 +16,6 @@
 #include <EEPROM.h>
 #include "LiquidCrystal_I2C.h"
 #include <Wire.h>
-#include <Adafruit_I2CDevice.h>
-#include <Adafruit_I2CRegister.h>
-#include <Adafruit_SHT31.h>
 
 uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
 void get_mcusr(void)     \
@@ -38,17 +35,13 @@ void get_mcusr(void) {
 #define  pINILLUMI   51
 #define  pCND        0x43
 #define  delayMillis 5000UL // 5sec
-#define  CDS0        A0
-#define  CDS0SW      A3
 
-const char VERSION[16] PROGMEM = "\xbd\xcf\xc9\xb3\xbc\xde\xad\xb8 V044 ";
+const char VERSION[16] PROGMEM = "Q917 UECS Sim V0";
 
 char uecsid[6], uecstext[180],strIP[16],linebuf[80];
 byte lineptr = 0;
-int  sht31addr = 0x44;  // Default SHT31 I2C Address
 unsigned long cndVal;   // CCM cnd Value
-bool enableHeater = false;
-char api[] = "api.smart-agri.jp";
+
 
 /////////////////////////////////////
 // Hardware Define
@@ -56,8 +49,6 @@ char api[] = "api.smart-agri.jp";
 
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 char lcdtext[6][17];
-
-Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 byte macaddr[6];
 IPAddress localIP,broadcastIP,subnetmaskIP,remoteIP;
@@ -77,9 +68,6 @@ void setup(void) {
   lcd.init();
   lcd.backlight();
   configure_wdt();
-  pinMode(2,INPUT_PULLUP);
-  pinMode(CDS0,INPUT_PULLUP);
-  pinMode(CDS0SW,INPUT_PULLUP);
   EEPROM.get(pUECSID,uecsid);
   EEPROM.get(pMACADDR,macaddr);
   for(i=0;i<16;i++) {
@@ -91,30 +79,6 @@ void setup(void) {
   lcdout(0,1,1);
   Serial.begin(115200);
   Serial.println(lcdtext[0]);
-  Serial.println("ST1"); // SHT31 test
-  if (! sht31.begin(sht31addr)) {   // Set to 0x45 for alternate i2c addr
-    Serial.println(F("ET1"));       // NO SHT31 at 0x44
-    for(i=0;i<10;i++) {
-      delay(100);
-      if (sht31.begin(sht31addr)) {
-        Serial.println(F("ST2"));    // SHT31 at 0x44
-        break;
-      }
-    }
-    if (i==10) {
-      Serial.println(F("ET2")); // NOT FOUND SHT31 SKIP
-      strcpy(lcdtext[3],"NO SHT31 SKIP   ");
-      lcdout(0,3,0);
-      sht31addr = 0;
-      cndVal |= 0x01000000;   // cnd:Alert=1
-    }
-  }
-  delay(500);
-  if (analogRead(CDS0SW)<100) {
-    strcpy(lcdtext[3],"CDS PRESENT     ");
-    lcdout(0,3,0);
-  }
-  delay(500);
   Ethernet.init(10);
   if (Ethernet.begin(macaddr)==0) {
     sprintf(lcdtext[1],"NFL");
@@ -172,26 +136,6 @@ void loop() {
    if (period10sec==1) {
      wdt_reset();
      period10sec = 0;
-     if (sht31addr>0) {
-       //      ther = sht31.readTemperature();
-       ia = pINAIRTEMP;
-       getSHTdata(&val[0],pINAIRTEMP,0);  // 整数型にしない
-       //     Serial.println(val);
-       sprintf(linebuf,"T=%sC",val);
-       uecsSendData(pINAIRTEMP,xmlDT,val);
-       getSHTdata(&val[0],pINAIRHUMID,0);  // 整数型
-       uecsSendData(pINAIRHUMID,xmlDT,val);
-       sprintf(lcdtext[4],"%s H=%s%%",linebuf,val);
-     } else {
-       strcpy(lcdtext[4],("NO SHT SENSOR"));
-     }
-     // INILLUMI(CdS) Presents
-     if (analogRead(CDS0SW)<100) {
-       cdsv = 1023 - analogRead(CDS0);
-       sprintf(&val[0],"%d",cdsv);
-       sprintf(lcdtext[5],"ILL=%d",cdsv);
-       uecsSendData(pINILLUMI,xmlDT,val);
-     }
      k++;
      switch(k) {
      case 3:
@@ -217,46 +161,6 @@ void loop() {
    if (period60sec==1) {
      period60sec = 0;
      wdt_reset();
-     if (sht31addr>0) {
-       getSHTdata(&val[0],pINAIRTEMP,1); // 小数点下1桁の整数型
-       ia = gisSendData(pINAIRTEMP,16,val);
-       switch(ia) {
-       case 0:
-         cndVal &= 0xffcffeff; // 
-         break;
-       case 1:
-         cndVal |= 0x00100100; // Not connect to Server
-         break;
-       case 2:
-         cndVal |= 0x00200100; // Server response timeout
-         break;
-       }
-       wdt_reset();
-       getSHTdata(&val[0],pINAIRHUMID,0); // 整数型
-       ia = gisSendData(pINAIRHUMID,17,val);
-       switch(ia) {
-       case 0:
-         cndVal &= 0xffcffdff; // 
-         break;
-       case 1:
-         cndVal |= 0x00100200; // Not connect to Server
-         break;
-       case 2:
-         cndVal |= 0x00200200; // Server response timeout
-         break;
-       }
-       cndVal &= 0xffffff0f;  // Reset maintain code
-       ia = Ethernet.maintain();
-       if (ia!=0) {
-         cndVal |= ((ia << 4) & 0xf0);
-       }
-     }
-     if (analogRead(CDS0SW)<100) {
-       cdsv = 1023 - analogRead(CDS0);
-       sprintf(&val[0],"%d",cdsv);
-       ia = gisSendData(pINILLUMI,261,val);
-       wdt_reset();
-     }
    }
    // 1 sec interval
    if (period1sec==1) {
