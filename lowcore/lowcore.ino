@@ -16,7 +16,7 @@
 void setup(void) {
   unsigned int i,j,r,a,u;
   byte t,room;
-  char c,name[8],z[4],txt[3];
+  char c,name[8],z[4];
   byte uecsid[6]={0x10,0x10,0x0c,0x00,0x00,0x0C},uecsrd[6];
   byte macadd[6]={0x02,0xa2,0x73,0x0C,0xff,0xff};
   byte
@@ -27,7 +27,7 @@ void setup(void) {
     data5[32] = {'c',1,1,1,0,29, 1,'c','n','d',0};
   
   Serial.begin(115200);
-  Serial.println("EEPROM SETTING for DENNOH01 VER 0.04");
+  Serial.println("EEPROM SETTING for DENNOH01 VER 0.05");
   pinMode(SELEB,INPUT); // SELE button
   delay(100);
   EEPROM.get(0x0,uecsrd);
@@ -45,7 +45,7 @@ void setup(void) {
   if (r==0) { // 書き込み済ならば表示だけを行って終了
     Serial.println("FINE DID NOT WRITE");
     Serial.println("HEXDATA:");
-    for(j=0;j<5;j++) {
+    for(j=0;j<11;j++) {
       sprintf(z,"0x%03X:",j*0x10);
       Serial.print(z);
       for(i=0;i<16;i++) {
@@ -103,16 +103,16 @@ void setup(void) {
   macadd[5] = (byte)(j & 0xff);
   Serial.print("MAC ADDRESS=");
   for(i=0;i<6;i++) {
-    sprintf(txt,"%02X",macadd[i]);
-    Serial.print(txt);
+    sprintf(z,"%02X",macadd[i]);
+    Serial.print(z);
     if (i<5) Serial.print(":");
   }
   Serial.println(); 
   EEPROM.put(0x6,macadd);
   Serial.print("MAC=");
   for(i=0;i<6;i++) {
-    sprintf(txt,"%02X",EEPROM.read(6+i));
-    Serial.print(txt);
+    sprintf(z,"%02X",EEPROM.read(6+i));
+    Serial.print(z);
     if (i<5) Serial.print(":");
   }
   wrrec(data1,0x10);
@@ -131,9 +131,11 @@ void setup(void) {
   
   Serial.println("HEXDATA:");
   for(j=0;j<11;j++) {
+    sprintf(z,"0x%03X:",j*0x10);
+    Serial.print(z);
     for(i=0;i<16;i++) {
-      sprintf(txt,"%02X",EEPROM.read(i+(j*0x10)));
-      Serial.print(txt);
+      sprintf(z,"%02X",EEPROM.read(i+(j*0x10)));
+      Serial.print(z);
       if (i<15) Serial.print(",");
     }
     Serial.println();
