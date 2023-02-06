@@ -68,7 +68,7 @@ const char ccmTypeCndHumid[] PROGMEM= "CndHumid.aXX";
 const char ccmUnitCndHumid[] PROGMEM= "";
 
 const char ccmNameRadiation[] PROGMEM= "Radiation";
-const char ccmTypeRadiation[] PROGMEM= "InAirRadiation";
+const char ccmTypeRadiation[] PROGMEM= "InRadiation";
 const char ccmUnitRadiation[] PROGMEM= "";
 
 const char ccmNameCndRadiation[] PROGMEM= "NodeCond_Radiation";
@@ -219,56 +219,45 @@ void pgm2mem(char a[],char b[]) {
 void ChangeThermostat(){
 //温度 やめる
   showValueTemp = U_ccmList[CCMID_InAirTemp].value;
+  Serial.print("showValueTemp=");
+  Serial.println(showValueTemp);
+  Serial.print("setONOFFAUTO_Temp=");
+  Serial.println(setONOFFAUTO_Temp);
   if(setONOFFAUTO_Temp==0) {
     U_ccmList[CCMID_CndInAirTemp].value=0;
-    Serial.print("TEMP-OFF\r\n");
     sidewindow(0); // STOP
-    //    digitalWrite(LED_Blue_Pin, LOW);
-    //    digitalWrite(D0_Pin, LOW);
   } else if(setONOFFAUTO_Temp==1) {
     // Manual ON
     U_ccmList[CCMID_CndInAirTemp].value=1;
-    Serial.println("TEMP-ON");
     sidewindow(0);
-    //    digitalWrite(LED_Blue_Pin, HIGH);
-    //    digitalWrite(D0_Pin, HIGH);
-  }
-  else if(setONOFFAUTO_Temp==2 && U_ccmList[CCMID_InAirTemp].validity && U_ccmList[CCMID_InAirTemp].value<setONTempFromWeb) {
+  } else if(setONOFFAUTO_Temp==2 && U_ccmList[CCMID_InAirTemp].validity && U_ccmList[CCMID_InAirTemp].value<setONTempFromWeb) {
     U_ccmList[CCMID_CndInAirTemp].value=1;
-    Serial.println("TEMP-ON");
-    //    digitalWrite(LED_Blue_Pin, HIGH);
-    //    digitalWrite(D0_Pin, HIGH);
-  }//Auto ON
+  } //Auto ON
   else {
     U_ccmList[CCMID_CndInAirTemp].value=0;
-    Serial.println("TEMP-OFF");
-    //    digitalWrite(LED_Blue_Pin, LOW);
-    //     digitalWrite(D0_Pin, LOW);
- }//OFF
+  }//OFF
   showValueStatusTemp = U_ccmList[CCMID_CndInAirTemp].value;
   Serial.print("CndTemp: ");
-  Serial.println(U_ccmList[CCMID_CndInAirHumid].value);
+  Serial.println(U_ccmList[CCMID_CndInAirTemp].value);
 
 //湿度　温風機が動く
   showValueHumidity = U_ccmList[CCMID_InAirHumid].value;
+  Serial.print("setONOFFAUTO_Humidity=");
+  Serial.println(setONOFFAUTO_Humidity);
   if(setONOFFAUTO_Humidity==0) {
     U_ccmList[CCMID_CndInAirHumid].value=0;
-    Serial.println("HUMID-OFF");
     digitalWrite(RLY1, HIGH);
  }//Manual OFF
-  else if(setONOFFAUTO_Humidity==1) {
+  else if(setONOFFAUTO_Humidity==1){ 
     U_ccmList[CCMID_CndInAirHumid].value=1;
-    Serial.println("HUMID-ON");
     digitalWrite(RLY1, LOW);
   }//Manual ON
   else if(setONOFFAUTO_Humidity==2 && U_ccmList[CCMID_InAirHumid].validity && U_ccmList[CCMID_InAirHumid].value > setONHumidityFromWeb) {
     U_ccmList[CCMID_CndInAirHumid].value=1;
-    Serial.println("HUMID-ON");
     digitalWrite(RLY1, LOW);
   }//Auto ON
   else {
     U_ccmList[CCMID_CndInAirHumid].value=0;
-    Serial.println("HUMID-OFF");
     digitalWrite(RLY1, HIGH);
   }//OFF
   showValueStatusHumidity = U_ccmList[CCMID_CndInAirHumid].value;
@@ -276,25 +265,25 @@ void ChangeThermostat(){
   Serial.println(showValueStatusHumidity);
 
 //照度　LEDランプ
+  Serial.print("setONOFFAUTO_Radiation=");
+  Serial.println(setONOFFAUTO_Radiation);
   showValueRadiation = U_ccmList[CCMID_Radiation].value;
+  Serial.print("U_ccmList[CCMID_Radiation].validity=");
+  Serial.println(U_ccmList[CCMID_Radiation].validity);
   if(setONOFFAUTO_Radiation==0) {
     U_ccmList[CCMID_CndRadiation].value=0;
-    Serial.println("ILLUMINANCE-OFF");
     led_lamp(0);
   }//Manual OFF
   else if(setONOFFAUTO_Radiation==1) {
     U_ccmList[CCMID_CndRadiation].value=1;
-    Serial.println("ILLUMINANCE-ON");
     led_lamp(1);
   }//Manual ON
   else if(setONOFFAUTO_Radiation==2 && U_ccmList[CCMID_Radiation].validity && U_ccmList[CCMID_Radiation].value<setONRadiationFromWeb) {
     U_ccmList[CCMID_CndRadiation].value=1;
-    Serial.println("ILLUMINANCE-ON");
     led_lamp(1);
   }//Auto ON
   else {
     U_ccmList[CCMID_CndRadiation].value=0;
-    Serial.println("ILLUMINANCE-OFF");
     led_lamp(0);
   }//OFF
   showValueStatusRadiation = U_ccmList[CCMID_CndRadiation].value;
@@ -302,20 +291,35 @@ void ChangeThermostat(){
   Serial.println(showValueStatusRadiation);
 
 //CO2 
+  Serial.print("setONOFFAUTO_CO2=");
+  Serial.println(setONOFFAUTO_CO2);
   showValueCO2 = U_ccmList[CCMID_CO2].value;
+  Serial.print("U_ccmList[CCMID_CO2].validity=");
+  Serial.println(U_ccmList[CCMID_CO2].validity);
   if(setONOFFAUTO_CO2==2 && U_ccmList[CCMID_CO2].validity ) {
     if (U_ccmList[CCMID_CO2].value <  300) {
       U_ccmList[CCMID_CndCO2].value=1;
       Serial.println("CO2-Under 300");
+      co2_gen(1);
       sidewindow(1);
     } else if (U_ccmList[CCMID_CO2].value >  700) {
       U_ccmList[CCMID_CndCO2].value=2;
       Serial.println("CO2-Over 700");
+      co2_gen(0);
       sidewindow(2);
     } else {
       U_ccmList[CCMID_CndCO2].value=4;
       Serial.println("CO2-STOP");
+      co2_gen(0);
       sidewindow(0);
+    }
+  } else {
+    if (setONOFFAUTO_CO2==0) {
+      co2_gen(0);
+      U_ccmList[CCMID_CndCO2].value=0;
+    } else if (setONOFFAUTO_CO2==1) {
+      co2_gen(1);
+      U_ccmList[CCMID_CndCO2].value=1;
     }
   }
   showValueStatusCO2 = U_ccmList[CCMID_CndCO2].value;
@@ -360,6 +364,22 @@ void led_lamp(int m) {
     break;
   default:
     digitalWrite(RLY3,LOW);
+    break;
+  }
+}
+
+//
+//  CO2 Generator on/off
+//    0: Off
+//    1: On
+//
+void co2_gen(int m) {
+  switch(m) {
+  case 0:
+    digitalWrite(RLY4,HIGH);
+    break;
+  default:
+    digitalWrite(RLY4,LOW);
     break;
   }
 }

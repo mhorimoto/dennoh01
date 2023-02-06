@@ -15,7 +15,7 @@ const byte U_InitPin_Sense=LOW;
 //ノードの基本情報
 ///////////////////////////////////
 
-const char U_name[] PROGMEM= "M304jp Node v2.15\0";//MAX 20 chars
+const char U_name[] PROGMEM= "M304jp Node v2.17\0";//MAX 20 chars
 const char U_vender[] PROGMEM= "HOLLY&Co.Ltd.\0";//MAX 20 chars
 const char U_uecsid[] PROGMEM= "10100C00000B\0";//12 chars fixed
 const char U_footnote[] PROGMEM= "M304jp UARDECS version\0";
@@ -212,22 +212,62 @@ const char** DUMMY = NULL;
 
 //表示素材の登録
 struct UECSUserHtml U_html[U_HtmlLine]={
-//{名前,入出力形式  ,単位 ,詳細説明,選択肢文字列  ,選択肢数,値     ,最小値,最大値,小数桁数}
-  {NAME0, UECSSHOWDATA  ,UNIT0  ,NOTE0  , DUMMY   , 0 , &(showValueTemp)  , 0, 0, DECIMAL_DIGIT},
-  {NAME1, UECSSELECTDATA  ,NONES  ,NOTE1  , stringSELECT  , 3 , &(setONOFFAUTO_Temp)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME2, UECSINPUTDATA ,UNIT2  ,NOTE2  , DUMMY   , 0 , &(setONTempFromWeb) , 100, 1000, DECIMAL_DIGIT},
-  {NAME3, UECSSHOWSTRING  ,NONES  ,NOTE3  , stringSHOW  , 2 , &(showValueStatusTemp)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME4, UECSSHOWDATA  ,UNIT4  ,NOTE4  , DUMMY   , 0 , &(showValueHumidity)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME5, UECSSELECTDATA  ,NONES  ,NOTE5  , stringSELECT_Humidity , 3 , &(setONOFFAUTO_Humidity)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME6, UECSINPUTDATA ,UNIT6  ,NOTE6  , DUMMY   , 0 , &(setONHumidityFromWeb) , 10, 100, DECIMAL_DIGIT_0},
-  {NAME7, UECSSHOWSTRING  ,NONES  ,NOTE7  , stringSHOW_Humidity , 2 , &(showValueStatusHumidity)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME8, UECSSHOWDATA  ,UNIT8  ,NOTE8  , DUMMY   , 0 , &(showValueRadiation)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME9, UECSSELECTDATA  ,NONES  ,NOTE9  , stringSELECT_Radiation , 3 , &(setONOFFAUTO_Radiation)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME10, UECSINPUTDATA ,UNIT10  ,NOTE10, DUMMY   , 0 , &(setONRadiationFromWeb) , 0, 1023, DECIMAL_DIGIT_0},
-  {NAME11, UECSSHOWSTRING  ,NONES  ,NOTE11  , stringSHOW_Radiation , 2 , &(showValueStatusRadiation)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME12, UECSSHOWDATA  ,UNIT12  ,NOTE12  , DUMMY   , 0 , &(showValueCO2)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME13, UECSSELECTDATA  ,NONES  ,NOTE13  , stringSELECT_CO2 , 3 , &(setONOFFAUTO_CO2)  , 0, 0, DECIMAL_DIGIT_0},
-  {NAME14, UECSINPUTDATA ,UNIT14  ,NOTE14  , DUMMY   , 0 , &(setONCO2FromWeb) , 0, 1023, DECIMAL_DIGIT_0},
-  {NAME15, UECSSHOWSTRING  ,NONES  ,NOTE15  , stringSHOW_CO2 , 2 , &(showValueStatusCO2)  , 0, 0, DECIMAL_DIGIT_0},
+/*****
+  {名前,
+   入出力形式,
+   単位,
+   詳細説明,
+   選択肢文字列,
+   選択肢数,
+   値,
+   最小値,
+   最大値,
+   小数桁数
+  }
+*****/
+  {NAME0,
+   UECSSHOWDATA,
+   UNIT0,
+   NOTE0,
+   DUMMY,
+   0,
+   &(showValueTemp),
+   0,
+   0,
+   DECIMAL_DIGIT
+  },
+  {NAME1,
+   UECSSELECTDATA,
+   NONES,
+   NOTE1,
+   stringSELECT,
+   3,
+   &(setONOFFAUTO_Temp),
+   0,
+   0,
+   DECIMAL_DIGIT_0},
+  {NAME2,
+   UECSINPUTDATA,
+   UNIT2,
+   NOTE2,
+   DUMMY,
+   0,
+   &(setONTempFromWeb),
+   -100,
+   1000,
+   DECIMAL_DIGIT},
+  {NAME3,  UECSSHOWSTRING,NONES  ,NOTE3 ,stringSHOW  ,2 , &(showValueStatusTemp)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME4,  UECSSHOWDATA  ,UNIT4  ,NOTE4 ,DUMMY       ,           0 , &(showValueHumidity)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME5,  UECSSELECTDATA,NONES  ,NOTE5 ,stringSELECT_Humidity , 3 , &(setONOFFAUTO_Humidity)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME6,  UECSINPUTDATA ,UNIT6  ,NOTE6 ,DUMMY       ,0 , &(setONHumidityFromWeb) , 10, 100, DECIMAL_DIGIT_0},
+  {NAME7,  UECSSHOWSTRING,NONES  ,NOTE7 ,stringSHOW_Humidity,    2 , &(showValueStatusHumidity)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME8,  UECSSHOWDATA  ,UNIT8  ,NOTE8 ,DUMMY       ,0 , &(showValueRadiation)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME9,  UECSSELECTDATA,NONES  ,NOTE9 ,stringSELECT_Radiation, 3 , &(setONOFFAUTO_Radiation)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME10, UECSINPUTDATA ,UNIT10 ,NOTE10,DUMMY       ,0 , &(setONRadiationFromWeb) , 0, 1023, DECIMAL_DIGIT_0},
+  {NAME11, UECSSHOWSTRING,NONES  ,NOTE11,stringSHOW_Radiation , 2 , &(showValueStatusRadiation)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME12, UECSSHOWDATA  ,UNIT12 ,NOTE12,DUMMY       ,0 , &(showValueCO2)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME13, UECSSELECTDATA,NONES  ,NOTE13,stringSELECT_CO2 , 3 , &(setONOFFAUTO_CO2)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME14, UECSINPUTDATA ,UNIT14 ,NOTE14,DUMMY       ,0 , &(setONCO2FromWeb) , 0, 1023, DECIMAL_DIGIT_0},
+  {NAME15, UECSSHOWSTRING,NONES  ,NOTE15,stringSHOW_CO2 , 2 , &(showValueStatusCO2)  , 0, 0, DECIMAL_DIGIT_0},
 };
 
