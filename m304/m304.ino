@@ -38,10 +38,10 @@ enum {
   CCMID_CndInAirTemp,
   CCMID_InAirHumid,
   CCMID_CndInAirHumid,
-  CCMID_Illuminance,
-  CCMID_CndIlluminance,
-  CCMID_REncoder,
-  CCMID_CndREncoder,
+  CCMID_Radiation,
+  CCMID_CndRadiation,
+  CCMID_CO2,
+  CCMID_CndCO2,
   CCMID_dummy, //CCMID_dummyは必ず最後に置くこと
 };
 
@@ -52,7 +52,7 @@ UECSCCM U_ccmList[U_MAX_CCM];
 
 //CCM定義用の素材
 const char ccmNameTemp[] PROGMEM= "Temperature";
-const char ccmTypeTemp[] PROGMEM= "InAirTemp.mIC";
+const char ccmTypeTemp[] PROGMEM= "InAirTemp";
 const char ccmUnitTemp[] PROGMEM= "C";
 
 const char ccmNameCndTemp[] PROGMEM= "NodeCond_Temp";
@@ -60,28 +60,28 @@ const char ccmTypeCndTemp[] PROGMEM= "CndTemp.aXX";
 const char ccmUnitCndTemp[] PROGMEM= "";
 
 const char ccmNameHumid[] PROGMEM= "AirHumid";
-const char ccmTypeHumid[] PROGMEM= "InAirHumid.mIC";
-const char ccmUnitHumid[] PROGMEM= "C";
+const char ccmTypeHumid[] PROGMEM= "InAirHumid";
+const char ccmUnitHumid[] PROGMEM= "%";
 
 const char ccmNameCndHumid[] PROGMEM= "NodeCond_Humid";
 const char ccmTypeCndHumid[] PROGMEM= "CndHumid.aXX";
 const char ccmUnitCndHumid[] PROGMEM= "";
 
-const char ccmNameIlluminance[] PROGMEM= "Illuminance";
-const char ccmTypeIlluminance[] PROGMEM= "Illuminance.mIC";
-const char ccmUnitIlluminance[] PROGMEM= "";
+const char ccmNameRadiation[] PROGMEM= "Radiation";
+const char ccmTypeRadiation[] PROGMEM= "InAirRadiation";
+const char ccmUnitRadiation[] PROGMEM= "";
 
-const char ccmNameCndIlluminance[] PROGMEM= "NodeCond_Illuminance";
-const char ccmTypeCndIlluminance[] PROGMEM= "CndIlluminance.aXX";
-const char ccmUnitCndIlluminance[] PROGMEM= "";
+const char ccmNameCndRadiation[] PROGMEM= "NodeCond_Radiation";
+const char ccmTypeCndRadiation[] PROGMEM= "CndRadiation.aXX";
+const char ccmUnitCndRadiation[] PROGMEM= "";
 
-const char ccmNameREncoder[] PROGMEM= "REncoder";
-const char ccmTypeREncoder[] PROGMEM= "REncoder.mIC";
-const char ccmUnitREncoder[] PROGMEM= "";
+const char ccmNameCO2[] PROGMEM= "CO2";
+const char ccmTypeCO2[] PROGMEM= "InAirCO2";
+const char ccmUnitCO2[] PROGMEM= "";
 
-const char ccmNameCndREncoder[] PROGMEM= "NodeCond_REncoder";
-const char ccmTypeCndREncoder[] PROGMEM= "CndREncoder.aXX";
-const char ccmUnitCndREncoder[] PROGMEM= "";
+const char ccmNameCndCO2[] PROGMEM= "NodeCond_CO2";
+const char ccmTypeCndCO2[] PROGMEM= "CndCO2.aXX";
+const char ccmUnitCndCO2[] PROGMEM= "";
 
 //------------------------------------------------------
 //UARDECS初期化用関数
@@ -92,12 +92,12 @@ void UserInit() {
 //You must assign unique MAC address to each nodes.
 //MACアドレス設定、必ずEthernet Shieldに書かれた値を入力して下さい。
 //全てのノードに異なるMACアドレスを設定する必要があります。
-  U_orgAttribute.mac[0] = 0x02;
-  U_orgAttribute.mac[1] = 0xA2;
-  U_orgAttribute.mac[2] = 0x73;
-  U_orgAttribute.mac[3] = 0x0B;
-  U_orgAttribute.mac[4] = 0x00;
-  U_orgAttribute.mac[5] = 0x03;
+  U_orgAttribute.mac[0] = atmem.read(0x06); //0x02;
+  U_orgAttribute.mac[1] = atmem.read(0x07); //0xA2;
+  U_orgAttribute.mac[2] = atmem.read(0x08); //0x73;
+  U_orgAttribute.mac[3] = atmem.read(0x09); //0x0B;
+  U_orgAttribute.mac[4] = atmem.read(0x0a); //0x00;
+  U_orgAttribute.mac[5] = atmem.read(0x0b); //0x2b;
   
 //Set ccm list
 //CCMの作成
@@ -107,10 +107,10 @@ void UserInit() {
   UECSsetCCM(true,  CCMID_CndInAirTemp, ccmNameCndTemp, ccmTypeCndTemp, ccmUnitCndTemp, 29, DECIMAL_DIGIT_0, A_1S_0);
   UECSsetCCM(false, CCMID_InAirHumid, ccmNameHumid, ccmTypeHumid, ccmUnitHumid, 29, DECIMAL_DIGIT_0, A_10S_0);
   UECSsetCCM(true,  CCMID_CndInAirHumid, ccmNameCndHumid, ccmTypeCndHumid, ccmUnitCndHumid, 29,  DECIMAL_DIGIT_0, A_1S_0);
-  UECSsetCCM(false, CCMID_Illuminance, ccmNameIlluminance, ccmTypeIlluminance, ccmUnitIlluminance, 29, DECIMAL_DIGIT_0, A_10S_0);
-  UECSsetCCM(true,  CCMID_CndIlluminance, ccmNameCndIlluminance, ccmTypeCndIlluminance, ccmUnitCndIlluminance, 29,  DECIMAL_DIGIT_0, A_1S_0);
-  UECSsetCCM(false, CCMID_REncoder, ccmNameREncoder, ccmTypeREncoder, ccmUnitREncoder, 29, DECIMAL_DIGIT_0, A_10S_0);
-  UECSsetCCM(true,  CCMID_CndREncoder, ccmNameCndREncoder, ccmTypeCndREncoder, ccmUnitCndREncoder, 29,  DECIMAL_DIGIT_0, A_1S_0);
+  UECSsetCCM(false, CCMID_Radiation, ccmNameRadiation, ccmTypeRadiation, ccmUnitRadiation, 29, DECIMAL_DIGIT_0, A_10S_0);
+  UECSsetCCM(true,  CCMID_CndRadiation, ccmNameCndRadiation, ccmTypeCndRadiation, ccmUnitCndRadiation, 29,  DECIMAL_DIGIT_0, A_1S_0);
+  UECSsetCCM(false, CCMID_CO2, ccmNameCO2, ccmTypeCO2, ccmUnitCO2, 29, DECIMAL_DIGIT_0, A_10S_0);
+  UECSsetCCM(true,  CCMID_CndCO2, ccmNameCndCO2, ccmTypeCndCO2, ccmUnitCndCO2, 29,  DECIMAL_DIGIT_0, A_1S_0);
 }
 
 //---------------------------------------------------------
@@ -194,12 +194,23 @@ void setup(){
   digitalWrite(RLY8,HIGH);
   lcd.begin(20,4);
   lcd.setCursor(0,0);
-  for(i=0;i<20;i++) {
-    pgn[i] = pgm_read_byte(&(U_name[i]));
-  }
-  pgn[i] = NULL;
+  pgm2mem(pgn,U_name);
   lcd.print(pgn);
   UECSsetup();
+  sprintf(pgn,"%02X%02X.%02X%02X.%02X%02X",
+	  U_orgAttribute.mac[0],U_orgAttribute.mac[1],
+	  U_orgAttribute.mac[2],U_orgAttribute.mac[3],
+	  U_orgAttribute.mac[4],U_orgAttribute.mac[5]);
+  lcd.setCursor(0,1);
+  lcd.print(pgn);
+}
+
+void pgm2mem(char a[],char b[]) {
+  int i;
+  for(i=0;i<20;i++) {
+    a[i] = pgm_read_byte(&(b[i]));
+  }
+  a[i] = NULL;
 }
 
 //---------------------------------------------------------
@@ -265,51 +276,51 @@ void ChangeThermostat(){
   Serial.println(showValueStatusHumidity);
 
 //照度　LEDランプ
-  showValueIlluminance = U_ccmList[CCMID_Illuminance].value;
-  if(setONOFFAUTO_Illuminance==0) {
-    U_ccmList[CCMID_CndIlluminance].value=0;
+  showValueRadiation = U_ccmList[CCMID_Radiation].value;
+  if(setONOFFAUTO_Radiation==0) {
+    U_ccmList[CCMID_CndRadiation].value=0;
     Serial.println("ILLUMINANCE-OFF");
     led_lamp(0);
   }//Manual OFF
-  else if(setONOFFAUTO_Illuminance==1) {
-    U_ccmList[CCMID_CndIlluminance].value=1;
+  else if(setONOFFAUTO_Radiation==1) {
+    U_ccmList[CCMID_CndRadiation].value=1;
     Serial.println("ILLUMINANCE-ON");
     led_lamp(1);
   }//Manual ON
-  else if(setONOFFAUTO_Illuminance==2 && U_ccmList[CCMID_Illuminance].validity && U_ccmList[CCMID_Illuminance].value<setONIlluminanceFromWeb) {
-    U_ccmList[CCMID_CndIlluminance].value=1;
+  else if(setONOFFAUTO_Radiation==2 && U_ccmList[CCMID_Radiation].validity && U_ccmList[CCMID_Radiation].value<setONRadiationFromWeb) {
+    U_ccmList[CCMID_CndRadiation].value=1;
     Serial.println("ILLUMINANCE-ON");
     led_lamp(1);
   }//Auto ON
   else {
-    U_ccmList[CCMID_CndIlluminance].value=0;
+    U_ccmList[CCMID_CndRadiation].value=0;
     Serial.println("ILLUMINANCE-OFF");
     led_lamp(0);
   }//OFF
-  showValueStatusIlluminance = U_ccmList[CCMID_CndIlluminance].value;
-  Serial.print("CndIlluminance: ");
-  Serial.println(showValueStatusIlluminance);
+  showValueStatusRadiation = U_ccmList[CCMID_CndRadiation].value;
+  Serial.print("CndRadiation: ");
+  Serial.println(showValueStatusRadiation);
 
-//可変抵抗器　そくそう
-  showValueREncoder = U_ccmList[CCMID_REncoder].value;
-  if(setONOFFAUTO_REncoder==2 && U_ccmList[CCMID_REncoder].validity ) {
-    if (U_ccmList[CCMID_REncoder].value <  300) {
-      U_ccmList[CCMID_CndREncoder].value=1;
-      Serial.println("REncoder-Under 300");
+//CO2 
+  showValueCO2 = U_ccmList[CCMID_CO2].value;
+  if(setONOFFAUTO_CO2==2 && U_ccmList[CCMID_CO2].validity ) {
+    if (U_ccmList[CCMID_CO2].value <  300) {
+      U_ccmList[CCMID_CndCO2].value=1;
+      Serial.println("CO2-Under 300");
       sidewindow(1);
-    } else if (U_ccmList[CCMID_REncoder].value >  700) {
-      U_ccmList[CCMID_CndREncoder].value=2;
-      Serial.println("REncoder-Over 700");
+    } else if (U_ccmList[CCMID_CO2].value >  700) {
+      U_ccmList[CCMID_CndCO2].value=2;
+      Serial.println("CO2-Over 700");
       sidewindow(2);
     } else {
-      U_ccmList[CCMID_CndREncoder].value=4;
-      Serial.println("REncoder-STOP");
+      U_ccmList[CCMID_CndCO2].value=4;
+      Serial.println("CO2-STOP");
       sidewindow(0);
     }
   }
-  showValueStatusREncoder = U_ccmList[CCMID_CndREncoder].value;
-  Serial.print("CndREncoder: ");
-  Serial.println(showValueStatusREncoder);
+  showValueStatusCO2 = U_ccmList[CCMID_CndCO2].value;
+  Serial.print("CndCO2: ");
+  Serial.println(showValueStatusCO2);
 
 }
 
@@ -328,7 +339,6 @@ void sidewindow(int m) {
   case 1:
     digitalWrite(RLY7,LOW);
     digitalWrite(RLY8,HIGH);
-    // Side window open
     break;
   case 2:
     digitalWrite(RLY7,HIGH);
