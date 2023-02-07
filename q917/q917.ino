@@ -11,17 +11,21 @@ EthernetClient client;
 
 byte   lcdf;
 uint8_t mac[6];
+uint8_t ip[] = {192,168,35,2};   // 先頭を0にするとDHCPで決定する。
+uint8_t nmask[]  = {255,255,255,0};
+uint8_t nullip[] = {0,0,0,0};
 char *txt[4][2];  // [screen][rows][columns]
 char strIP[16];
 char uecsid[6], uecstext[180],linebuf[80];
 IPAddress localIP,broadcastIP,subnetmaskIP,remoteIP;
-EthernetUDP Udp16520; //,Udp16529;
+EthernetUDP Udp16520;
+int period1sec,period10sec,period60sec;
 
 void setup(void) {
   int i;
   char z[17];
   txt[0][0] = "UECS Simulator  ";
-  txt[0][1] = "Q917 Ver:0.06   ";
+  txt[0][1] = "Q917 Ver:1.00   ";
   txt[1][0] = "DEN-NOH01       ";
   txt[1][1] = "                ";
   txt[2][0] = "MAC Address     ";
@@ -46,21 +50,24 @@ void setup(void) {
   sprintf(txt[3][0],"%02X%02X.%02X%02X.%02X%02X",
 	  mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
   lcdout(3,0,1,1);
-  delay(800);
-  if (Ethernet.begin(mac) == 0) {
-    lcd.setCursor(0,1);
-    sprintf(txt[3][1],"NFL");
-  } else {
-    localIP = Ethernet.localIP();
-    subnetmaskIP = Ethernet.subnetMask();
-    for(i=0;i<4;i++) {
-      broadcastIP[i] = ~subnetmaskIP[i]|localIP[i];
+  delay(500);
+  if (ip[0]==0) {
+    if (Ethernet.begin(mac) == 0) {
+      lcd.setCursor(0,1);
+      sprintf(txt[3][1],"NFL");
     }
-    sprintf(strIP,"%d.%d.%d.%d",localIP[0],localIP[1],localIP[2],localIP[3]);
-    sprintf(txt[3][1],"%s",strIP);
-    lcdout(3,0,1,1);
-    Udp16520.begin(16520);
+  } else {
+    Ethernet.begin(mac,ip,nullip,nullip,nmask);
   }
+  localIP = Ethernet.localIP();
+  subnetmaskIP = Ethernet.subnetMask();
+  for(i=0;i<4;i++) {
+    broadcastIP[i] = ~subnetmaskIP[i]|localIP[i];
+  }
+  sprintf(strIP,"%d.%d.%d.%d",localIP[0],localIP[1],localIP[2],localIP[3]);
+  sprintf(txt[3][1],"%s",strIP);
+  lcdout(3,0,1,1);
+  Udp16520.begin(16520);
   delay(1000);
   lcd.clear();
   pinMode(A0,INPUT);
@@ -69,23 +76,15 @@ void setup(void) {
   pinMode(A3,INPUT);
   pinMode(9,INPUT);
   lcdf = 0;
-  // start the Ethernet connection:
-    //Serial.println("Failed to configure Ethernet using DHCP");
-    // no point in carrying on, so do nothing forevermore:
-  //  }
-  // print your local IP address:
-  //  for (byte thisByte = 0; thisByte < 4; thisByte++) {
-    // print the value of each byte of the IP address:
-    //    Serial.print(Ethernet.localIP()[thisByte], DEC);
-    //    Serial.print(".");
-    //  }
-    //  Serial.println();
+  period1sec  = 0;
+  period10sec = 0;
+  period60sec = 0;
 }
 
 void loop(void) {
-  const char *xmlDT PROGMEM = "<?xml version=\"1.0\"?><UECS ver=\"1.00-E10\"><DATA type=\"%s\" room=\"%d\" region=\"%d\" order=\"%d\" priority=\"%d\">%s</DATA><IP>%s</IP></UECS>";
   int a1,a2,a3,a4,a1b,a1c;
   char s1[6],s2[6],s3[6],s4[6];
+  static unsigned long msec,p1msec,p10msec,p60msec;
   long li;
   float fl;
 
@@ -142,12 +141,42 @@ void loop(void) {
   sprintf(s2,"%d",a2);
   sprintf(s3,"%d",(int)li);
   sprintf(s4,"%d",a4);
-  uecsSendData(0x10,xmlDT,s1);
-  uecsSendData(0x30,xmlDT,s2);
-  uecsSendData(0x50,xmlDT,s3);
-  uecsSendData(0x70,xmlDT,s4);
+  msec = millis();
+  if ((msec-p1msec)>=1000) {
+    period1sec = 1;
+    p1msec = msec;
+  }
+  if ((msec-p10msec)>=10000) {
+    period10sec = 1;
+    p10msec = msec;
+  }
+  if ((msec-p60msec)>=60000) {
+    period60sec = 1;
+    p60msec = msec;
+  }
+  if (period1sec==1) UserEvery1Sec(s1,s2,s3,s4);
+  if (period10sec==1) UserEvery10Sec();
+  if (period60sec==1) UserEveryMinute();
+}
 
-  delay(1000);
+void UserEvery1Sec(char s1[],char s2[],char s3[],char s4[]) {
+  period1sec = 2;
+  uecsSendData(0x10,s1);
+  uecsSendData(0x30,s2);
+  uecsSendData(0x50,s3);
+  uecsSendData(0x70,s4);
+  uecsSendData(0x90,"0");
+  period1sec = 0;
+}
+
+void UserEvery10Sec() {
+  period10sec = 2;
+  period10sec = 0;
+}
+
+void UserEveryMinute() {
+  period60sec = 2;
+  period60sec = 0;
 }
 
 void lcdout(int m,int l1,int l2,int cl) {
@@ -160,7 +189,8 @@ void lcdout(int m,int l1,int l2,int cl) {
   lcd.print(txt[m][l2]);
 }
 
-void uecsSendData(int a,char *xmlDT,char *val) {
+void uecsSendData(int a,char *val) {
+  const char *xmlDT PROGMEM = "<?xml version=\"1.0\"?><UECS ver=\"1.00-E10\"><DATA type=\"%s\" room=\"%d\" region=\"%d\" order=\"%d\" priority=\"%d\">%s</DATA><IP>%s</IP></UECS>";
   byte room,region,order,priority,interval;
   int  i;
   char name[26],dname[26]; // ,val[6];
