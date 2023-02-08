@@ -22,7 +22,7 @@ AT24C256      atmem(0);
 EthernetClient client;
 
 char pgname[21],lcdtxt[21];
-char U_nodename[20] = "M304jp";//MAX 19chars (This value enabled in safemode)
+char U_nodename[20] = "DEN-NOH01-M304jp";//MAX 19chars (This value enabled in safemode)
 UECSOriginalAttribute U_orgAttribute;//この定義は弄らないで下さい
 
 //////////////////////////////////
@@ -90,8 +90,6 @@ const char ccmUnitCndCO2[] PROGMEM= "";
 void UserInit() {
 //MAC address is printed on sticker of Ethernet Shield.
 //You must assign unique MAC address to each nodes.
-//MACアドレス設定、必ずEthernet Shieldに書かれた値を入力して下さい。
-//全てのノードに異なるMACアドレスを設定する必要があります。
   U_orgAttribute.mac[0] = atmem.read(0x06); //0x02;
   U_orgAttribute.mac[1] = atmem.read(0x07); //0xA2;
   U_orgAttribute.mac[2] = atmem.read(0x08); //0x73;
@@ -118,7 +116,7 @@ void UserInit() {
 //この関数呼び出し後にEEPROMへの値の保存とWebページの再描画が行われる
 //---------------------------------------------------------
 void OnWebFormRecieved(){
-  ChangeThermostat();
+  Operation();
 }
 
 
@@ -127,7 +125,7 @@ void OnWebFormRecieved(){
 //関数の終了後に自動的にCCMが送信される
 //---------------------------------------------------------
 void UserEverySecond(){
-  ChangeThermostat();
+  Operation();
 }
 
 //---------------------------------------------------------
@@ -164,6 +162,7 @@ void loop(){
 //必要に応じて処理を記述してもかまわない。
 //---------------------------------------------------------
 void setup(){
+  IPAddress localIP,broadcastIP,subnetmaskIP,remoteIP;
   char pgn[21];
   int i;
   Serial.begin(115200);
@@ -203,6 +202,14 @@ void setup(){
 	  U_orgAttribute.mac[4],U_orgAttribute.mac[5]);
   lcd.setCursor(0,1);
   lcd.print(pgn);
+  localIP = Ethernet.localIP();
+  subnetmaskIP = Ethernet.subnetMask();
+  for(i=0;i<4;i++) {
+    broadcastIP[i] = ~subnetmaskIP[i]|localIP[i];
+  }
+  sprintf(pgn,"%d.%d.%d.%d",localIP[0],localIP[1],localIP[2],localIP[3]);
+  lcd.setCursor(0,2);
+  lcd.print(pgn);
 }
 
 void pgm2mem(char a[],char b[]) {
@@ -214,118 +221,140 @@ void pgm2mem(char a[],char b[]) {
 }
 
 //---------------------------------------------------------
-//サーモスタット動作を変化させる関数
+//  MAIN OPERATION
 //---------------------------------------------------------
-void ChangeThermostat(){
-//温度 やめる
+void Operation(){
+
+  /** START ***************************************************/
+  /* Temperature RLY7,RLY8                                    */
+  /************************************************************/
+  
   showValueTemp = U_ccmList[CCMID_InAirTemp].value;
-  Serial.print("showValueTemp=");
-  Serial.println(showValueTemp);
-  Serial.print("setONOFFAUTO_Temp=");
-  Serial.println(setONOFFAUTO_Temp);
-  if(setONOFFAUTO_Temp==0) {
+  switch(setONOFFAUTO_Temp) {
+  case 0: // Force SideWindow Motor STOP
     U_ccmList[CCMID_CndInAirTemp].value=0;
-    sidewindow(0); // STOP
-  } else if(setONOFFAUTO_Temp==1) {
-    // Manual ON
-    U_ccmList[CCMID_CndInAirTemp].value=1;
     sidewindow(0);
-  } else if(setONOFFAUTO_Temp==2 && U_ccmList[CCMID_InAirTemp].validity && U_ccmList[CCMID_InAirTemp].value<setONTempFromWeb) {
+    break;
+  case 1: // Force SideWindow Motor CLOSE
     U_ccmList[CCMID_CndInAirTemp].value=1;
-  } //Auto ON
-  else {
-    U_ccmList[CCMID_CndInAirTemp].value=0;
-  }//OFF
-  showValueStatusTemp = U_ccmList[CCMID_CndInAirTemp].value;
-  Serial.print("CndTemp: ");
-  Serial.println(U_ccmList[CCMID_CndInAirTemp].value);
-
-//湿度　温風機が動く
-  showValueHumidity = U_ccmList[CCMID_InAirHumid].value;
-  Serial.print("setONOFFAUTO_Humidity=");
-  Serial.println(setONOFFAUTO_Humidity);
-  if(setONOFFAUTO_Humidity==0) {
-    U_ccmList[CCMID_CndInAirHumid].value=0;
-    digitalWrite(RLY1, HIGH);
- }//Manual OFF
-  else if(setONOFFAUTO_Humidity==1){ 
-    U_ccmList[CCMID_CndInAirHumid].value=1;
-    digitalWrite(RLY1, LOW);
-  }//Manual ON
-  else if(setONOFFAUTO_Humidity==2 && U_ccmList[CCMID_InAirHumid].validity && U_ccmList[CCMID_InAirHumid].value > setONHumidityFromWeb) {
-    U_ccmList[CCMID_CndInAirHumid].value=1;
-    digitalWrite(RLY1, LOW);
-  }//Auto ON
-  else {
-    U_ccmList[CCMID_CndInAirHumid].value=0;
-    digitalWrite(RLY1, HIGH);
-  }//OFF
-  showValueStatusHumidity = U_ccmList[CCMID_CndInAirHumid].value;
-  Serial.print("CndHumid: ");
-  Serial.println(showValueStatusHumidity);
-
-//照度　LEDランプ
-  Serial.print("setONOFFAUTO_Radiation=");
-  Serial.println(setONOFFAUTO_Radiation);
-  showValueRadiation = U_ccmList[CCMID_Radiation].value;
-  Serial.print("U_ccmList[CCMID_Radiation].validity=");
-  Serial.println(U_ccmList[CCMID_Radiation].validity);
-  if(setONOFFAUTO_Radiation==0) {
-    U_ccmList[CCMID_CndRadiation].value=0;
-    led_lamp(0);
-  }//Manual OFF
-  else if(setONOFFAUTO_Radiation==1) {
-    U_ccmList[CCMID_CndRadiation].value=1;
-    led_lamp(1);
-  }//Manual ON
-  else if(setONOFFAUTO_Radiation==2 && U_ccmList[CCMID_Radiation].validity && U_ccmList[CCMID_Radiation].value<setONRadiationFromWeb) {
-    U_ccmList[CCMID_CndRadiation].value=1;
-    led_lamp(1);
-  }//Auto ON
-  else {
-    U_ccmList[CCMID_CndRadiation].value=0;
-    led_lamp(0);
-  }//OFF
-  showValueStatusRadiation = U_ccmList[CCMID_CndRadiation].value;
-  Serial.print("CndRadiation: ");
-  Serial.println(showValueStatusRadiation);
-
-//CO2 
-  Serial.print("setONOFFAUTO_CO2=");
-  Serial.println(setONOFFAUTO_CO2);
-  showValueCO2 = U_ccmList[CCMID_CO2].value;
-  Serial.print("U_ccmList[CCMID_CO2].validity=");
-  Serial.println(U_ccmList[CCMID_CO2].validity);
-  if(setONOFFAUTO_CO2==2 && U_ccmList[CCMID_CO2].validity ) {
-    if (U_ccmList[CCMID_CO2].value <  300) {
-      U_ccmList[CCMID_CndCO2].value=1;
-      Serial.println("CO2-Under 300");
-      co2_gen(1);
-      sidewindow(1);
-    } else if (U_ccmList[CCMID_CO2].value >  700) {
-      U_ccmList[CCMID_CndCO2].value=2;
-      Serial.println("CO2-Over 700");
-      co2_gen(0);
-      sidewindow(2);
-    } else {
-      U_ccmList[CCMID_CndCO2].value=4;
-      Serial.println("CO2-STOP");
-      co2_gen(0);
-      sidewindow(0);
+    sidewindow(1);
+    break;
+  case 2: // Force SideWindow Motor OPEN
+    U_ccmList[CCMID_CndInAirTemp].value=2;
+    sidewindow(2);
+    break;
+  case 3: // Auto mode
+    if(U_ccmList[CCMID_InAirTemp].validity) {
+      if (showValueTemp < setONTempFromWeb) { // temperature is cold then windows close.
+        U_ccmList[CCMID_CndInAirTemp].value=1;
+        sidewindow(1);
+      } else if (showValueTemp > (setONTempFromWeb+100)) { // temperature is hot then windows open.
+        U_ccmList[CCMID_CndInAirTemp].value=2;
+        sidewindow(2);
+      } else { // temperature is normal windows is stop.
+        U_ccmList[CCMID_CndInAirTemp].value=0;
+        sidewindow(0);
+      }
+      break;
     }
+  }
+  showValueStatusTemp = U_ccmList[CCMID_CndInAirTemp].value;
+  /** END *****************************************************/
+  /* Temperature RLY7,RLY8                                    */
+  /************************************************************/
+
+  /** START ***************************************************/
+  /* Humidity RLY1                                            */
+  /************************************************************/
+
+  showValueHumidity = U_ccmList[CCMID_InAirHumid].value;
+  if (setONOFFAUTO_Humidity==0) {
+    // Force OFF(Break)
+    U_ccmList[CCMID_CndInAirHumid].value=0;
+    digitalWrite(RLY1, HIGH);
+  } else if (setONOFFAUTO_Humidity==1) {
+    // Force ON(Make)
+    U_ccmList[CCMID_CndInAirHumid].value=1;
+    digitalWrite(RLY1, LOW);
+  } else if (setONOFFAUTO_Humidity==2 && U_ccmList[CCMID_InAirHumid].validity
+             && U_ccmList[CCMID_InAirHumid].value < setONHumidityFromWeb) {
+    // Auto if (Humidity < Defined_Value) then RLY1 is ON(Make)
+    U_ccmList[CCMID_CndInAirHumid].value=1;
+    digitalWrite(RLY1, LOW);
   } else {
-    if (setONOFFAUTO_CO2==0) {
-      co2_gen(0);
-      U_ccmList[CCMID_CndCO2].value=0;
-    } else if (setONOFFAUTO_CO2==1) {
-      co2_gen(1);
-      U_ccmList[CCMID_CndCO2].value=1;
+    // Auto elese RLY1 is OFF(Break)
+    U_ccmList[CCMID_CndInAirHumid].value=0;
+    digitalWrite(RLY1, HIGH);
+  }
+  showValueStatusHumidity = U_ccmList[CCMID_CndInAirHumid].value;
+  //  Serial.print("CndHumid: ");
+  //  Serial.println(showValueStatusHumidity);
+
+  /** END *****************************************************/
+  /* Humidity RLY1                                            */
+  /************************************************************/
+
+  /** START ***************************************************/
+  /* Radiation RLY3                                           */
+  /************************************************************/
+
+  showValueRadiation = U_ccmList[CCMID_Radiation].value;
+  switch(setONOFFAUTO_Radiation) {
+  case 0: // Force OFF
+    U_ccmList[CCMID_CndRadiation].value=0;
+    led_lamp(0);
+    break;
+  case 1: // Force ON
+    U_ccmList[CCMID_CndRadiation].value=1;
+    led_lamp(1);
+    break;
+  case 2: // Auto mode
+    if(U_ccmList[CCMID_Radiation].validity) {
+      if ( U_ccmList[CCMID_Radiation].value < setONRadiationFromWeb) { // Lamp ON
+        U_ccmList[CCMID_CndRadiation].value=1;
+        led_lamp(1);
+      } else {
+        U_ccmList[CCMID_CndRadiation].value=0;
+        led_lamp(0);
+      }
+    }
+  }
+  showValueStatusRadiation = U_ccmList[CCMID_CndRadiation].value;
+
+  /** END *****************************************************/
+  /* Radiation RLY3                                           */
+  /************************************************************/
+
+  /** START ***************************************************/
+  /* CO2 RLY4                                                 */
+  /************************************************************/
+
+  showValueCO2 = U_ccmList[CCMID_CO2].value;
+  switch(setONOFFAUTO_CO2) {
+  case 0: // Force generator OFF
+    co2_gen(0);
+    U_ccmList[CCMID_CndCO2].value=0;
+    break;
+  case 1: // Force generator ON
+    co2_gen(1);
+    U_ccmList[CCMID_CndCO2].value=1;
+    break;
+  case 2: // Auto mode
+    if(U_ccmList[CCMID_CO2].validity ) {
+      if ( U_ccmList[CCMID_CO2].value < setONCO2FromWeb) {
+        U_ccmList[CCMID_CndCO2].value=1;
+        co2_gen(1);
+      } else {
+        U_ccmList[CCMID_CndCO2].value=0;
+        co2_gen(0);
+      }
     }
   }
   showValueStatusCO2 = U_ccmList[CCMID_CndCO2].value;
-  Serial.print("CndCO2: ");
-  Serial.println(showValueStatusCO2);
 
+  /** END *****************************************************/
+  /* CO2 RLY4                                                 */
+  /************************************************************/
 }
 
 
@@ -333,9 +362,9 @@ void ChangeThermostat(){
 // Side Window Motor Contorol
 //
 //   m : running mode
-//       0 = STOP
-//       1 = CLOSE
-//       2 = OPEN
+//       0 = STOP   (RLY7=Break,RLY8=Break)
+//       1 = CLOSE  (RLY7=Make,RLY8=Break)
+//       2 = OPEN   (RLY7=Break,RLY8=Make)
 //       OTHERS = STOP
 //
 void sidewindow(int m) {
@@ -356,6 +385,10 @@ void sidewindow(int m) {
 
 //
 //  LED light on/off
+//
+//  m : running mode
+//       0 = STOP  (RLY3=Break)
+//   not 0 = RUN   (RLY3=Make)
 //
 void led_lamp(int m) {
   switch(m) {

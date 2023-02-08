@@ -15,7 +15,7 @@ const byte U_InitPin_Sense=LOW;
 //ノードの基本情報
 ///////////////////////////////////
 
-const char U_name[] PROGMEM= "M304jp Node v2.17\0";//MAX 20 chars
+const char U_name[] PROGMEM= "M304jp Node v2.21\0";//MAX 20 chars
 const char U_vender[] PROGMEM= "HOLLY&Co.Ltd.\0";//MAX 20 chars
 const char U_uecsid[] PROGMEM= "10100C00000B\0";//12 chars fixed
 const char U_footnote[] PROGMEM= "M304jp UARDECS version\0";
@@ -27,24 +27,29 @@ const int U_HtmlLine = 16;
 
 //●表示素材の定義(1)数値表示
 //UECSSHOWDATA
-const char NAME0[] PROGMEM= "Temperature";
+const char NAME0[] PROGMEM= "気温";
 const char UNIT0[] PROGMEM= "C";
-const char NOTE0[] PROGMEM= "SHOWDATA";
+const char NOTE0[] PROGMEM= "";
 //表示用の値を格納する変数
 //小数桁数が1の場合、123が12.3と表示される
 signed long showValueTemp;
 
 //●表示素材の定義(2)選択肢表示
 //UECSSELECTDATA
-const char NAME1[] PROGMEM= "UserSwitch";
-const char NOTE1[] PROGMEM= "SELECTDATA";
-const char UECSOFF[] PROGMEM= "OFF";
-const char UECSON[] PROGMEM= "ON";
-const char UECSAUTO[] PROGMEM= "AUTO";
-const char *stringSELECT[3]={
-  UECSOFF,
-  UECSON,
-  UECSAUTO,
+const char NAME1[]     PROGMEM= "動作モード";
+const char NOTE1[]     PROGMEM= "";
+const char UECSOFF[]   PROGMEM= "OFF";
+const char UECSON[]    PROGMEM= "ON";
+const char UECSSTOP[]  PROGMEM= "STOP";
+const char UECSOPEN[]  PROGMEM= "OPEN";
+const char UECSCLOSE[] PROGMEM= "CLOSE";
+const char UECSRUN[]   PROGMEM= "RUN";
+const char UECSAUTO[]  PROGMEM= "AUTO";
+const char *stringSELECT[4]={
+  UECSSTOP,
+  UECSCLOSE,
+  UECSOPEN,
+  UECSAUTO
 };
 
 //入力された選択肢の位置を受け取る変数
@@ -53,9 +58,9 @@ signed long setONOFFAUTO_Temp;
 
 //●表示素材の定義(3)数値入力
 //UECSINPUTDATA
-const char NAME2[] PROGMEM= "SetTemp";
+const char NAME2[] PROGMEM= "気温しきい値";
 const char UNIT2[] PROGMEM= "C";
-const char NOTE2[] PROGMEM= "INPUTDATA";
+const char NOTE2[] PROGMEM= "この値の前後で側窓の開閉が行われる";
 
 //入力された数値を受け取る変数
 //小数桁数が1の場合、例えばWeb上で12.3が入力されると123が代入される
@@ -63,8 +68,8 @@ signed long setONTempFromWeb;
 
 //●表示素材の定義(4)文字表示
 //UECSSHOWSTRING
-const char NAME3[] PROGMEM= "Now status";
-const char NOTE3[] PROGMEM= "SHOWSTRING";
+const char NAME3[] PROGMEM= "状態";
+const char NOTE3[] PROGMEM= "RLY7,RLY8</td><tr>\n<tr style=\"background:#888888;\"><td colspan=\"4\">";
 const char SHOWSTRING_OFF[] PROGMEM= "OUTPUT:OFF";
 const char SHOWSTRING_ON [] PROGMEM= "OUTPUT:ON";
 const char *stringSHOW[2]={
@@ -75,9 +80,9 @@ signed long showValueStatusTemp;
 
 //●表示素材の定義(1)数値表示
 //UECSSHOWDATA
-const char NAME4[] PROGMEM= "Humidity";
+const char NAME4[] PROGMEM= "湿度";
 const char UNIT4[] PROGMEM= "%";
-const char NOTE4[] PROGMEM= "SHOWDATA";
+const char NOTE4[] PROGMEM= "";
 
 //表示用の値を格納する変数
 //小数桁数が1の場合、123が12.3と表示される
@@ -85,8 +90,8 @@ signed long showValueHumidity;
 
 //●表示素材の定義(2)選択肢表示
 //UECSSELECTDATA
-const char NAME5[] PROGMEM= "UserSwitch";
-const char NOTE5[] PROGMEM= "SELECTDATA";
+const char NAME5[] PROGMEM= "動作モード";
+const char NOTE5[] PROGMEM= "";
 const char *stringSELECT_Humidity[3]={
   UECSOFF,
   UECSON,
@@ -99,9 +104,9 @@ signed long setONOFFAUTO_Humidity;
 
 //●表示素材の定義(3)数値入力
 //UECSINPUTDATA
-const char NAME6[] PROGMEM= "SetHumidity";
+const char NAME6[] PROGMEM= "湿度しきい値";
 const char UNIT6[] PROGMEM= "%";
-const char NOTE6[] PROGMEM= "INPUTDATA";
+const char NOTE6[] PROGMEM= "この値よりも小さいとミストを動作\n";
 
 //入力された数値を受け取る変数
 //小数桁数が1の場合、例えばWeb上で12.3が入力されると123が代入される
@@ -109,8 +114,8 @@ signed long setONHumidityFromWeb;
 
 //●表示素材の定義(4)文字表示
 //UECSSHOWSTRING
-const char NAME7[] PROGMEM= "Now status";
-const char NOTE7[] PROGMEM= "SHOWSTRING";
+const char NAME7[] PROGMEM= "状態";
+const char NOTE7[] PROGMEM= "RLY1</td><tr>\n<tr style=\"background:#888888;\"><td colspan=\"4\">";
 const char *stringSHOW_Humidity[2]={
   SHOWSTRING_OFF,
   SHOWSTRING_ON,
@@ -119,9 +124,9 @@ signed long showValueStatusHumidity;
 
 //●表示素材の定義(1)数値表示
 //UECSSHOWDATA
-const char NAME8[] PROGMEM= "Radiation";
-const char UNIT8[] PROGMEM= "";
-const char NOTE8[] PROGMEM= "SHOWDATA";
+const char NAME8[] PROGMEM= "日射量";
+const char UNIT8[] PROGMEM= "kW/m<sup>2</sup>";
+const char NOTE8[] PROGMEM= "";
 
 //表示用の値を格納する変数
 //小数桁数が1の場合、123が12.3と表示される
@@ -129,12 +134,12 @@ signed long showValueRadiation;
 
 //●表示素材の定義(2)選択肢表示
 //UECSSELECTDATA
-const char NAME9[] PROGMEM= "UserSwitch";
-const char NOTE9[] PROGMEM= "SELECTDATA";
+const char NAME9[] PROGMEM= "動作モード";
+const char NOTE9[] PROGMEM= "";
 const char *stringSELECT_Radiation[3]={
   UECSOFF,
   UECSON,
-  UECSAUTO,
+  UECSAUTO
 };
 
 //入力された選択肢の位置を受け取る変数
@@ -143,9 +148,9 @@ signed long setONOFFAUTO_Radiation;
 
 //●表示素材の定義(3)数値入力
 //UECSINPUTDATA
-const char NAME10[] PROGMEM= "SetRadiation";
-const char UNIT10[] PROGMEM= "";
-const char NOTE10[] PROGMEM= "INPUTDATA";
+const char NAME10[] PROGMEM= "日射量しきい値";
+const char UNIT10[] PROGMEM= "kW/m<sup>2</sup>";
+const char NOTE10[] PROGMEM= "この値を境に補光装置を動作させる。";
 
 //入力された数値を受け取る変数
 //小数桁数が1の場合、例えばWeb上で12.3が入力されると123が代入される
@@ -153,8 +158,8 @@ signed long setONRadiationFromWeb;
 
 //●表示素材の定義(4)文字表示
 //UECSSHOWSTRING
-const char NAME11[] PROGMEM= "Now status";
-const char NOTE11[] PROGMEM= "SHOWSTRING";
+const char NAME11[] PROGMEM= "状態";
+const char NOTE11[] PROGMEM= "RLY3</td><tr>\n<tr style=\"background:#888888;\"><td colspan=\"4\">";
 const char *stringSHOW_Radiation[2]={
   SHOWSTRING_OFF,
   SHOWSTRING_ON,
@@ -163,9 +168,9 @@ signed long showValueStatusRadiation;
 
 //●表示素材の定義(1)数値表示
 //UECSSHOWDATA
-const char NAME12[] PROGMEM= "CO2";
-const char UNIT12[] PROGMEM= "";
-const char NOTE12[] PROGMEM= "SHOWDATA";
+const char NAME12[] PROGMEM= "CO<sub>2</sub>濃度";
+const char UNIT12[] PROGMEM= "ppm";
+const char NOTE12[] PROGMEM= "";
 
 //表示用の値を格納する変数
 //小数桁数が1の場合、123が12.3と表示される
@@ -173,8 +178,8 @@ signed long showValueCO2;
 
 //●表示素材の定義(2)選択肢表示
 //UECSSELECTDATA
-const char NAME13[] PROGMEM= "UserSwitch";
-const char NOTE13[] PROGMEM= "SELECTDATA";
+const char NAME13[] PROGMEM= "動作モード";
+const char NOTE13[] PROGMEM= "";
 const char *stringSELECT_CO2[3]={
   UECSOFF,
   UECSON,
@@ -187,9 +192,9 @@ signed long setONOFFAUTO_CO2;
 
 //●表示素材の定義(3)数値入力
 //UECSINPUTDATA
-const char NAME14[] PROGMEM= "SetCO2";
-const char UNIT14[] PROGMEM= "";
-const char NOTE14[] PROGMEM= "INPUTDATA";
+const char NAME14[] PROGMEM= "CO<sub>2</sub>しきい値";
+const char UNIT14[] PROGMEM= "ppm";
+const char NOTE14[] PROGMEM= "この値を境にCO<sub>2</sub>発生装置のON/OFFを行う";
 
 //入力された数値を受け取る変数
 //小数桁数が1の場合、例えばWeb上で12.3が入力されると123が代入される
@@ -197,8 +202,8 @@ signed long setONCO2FromWeb;
 
 //●表示素材の定義(4)文字表示
 //UECSSHOWSTRING
-const char NAME15[] PROGMEM= "Now status";
-const char NOTE15[] PROGMEM= "SHOWSTRING";
+const char NAME15[] PROGMEM= "状態";
+const char NOTE15[] PROGMEM= "RLY4";
 const char *stringSHOW_CO2[2]={
   SHOWSTRING_OFF,
   SHOWSTRING_ON,
@@ -241,7 +246,7 @@ struct UECSUserHtml U_html[U_HtmlLine]={
    NONES,
    NOTE1,
    stringSELECT,
-   3,
+   4,
    &(setONOFFAUTO_Temp),
    0,
    0,
