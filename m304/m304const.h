@@ -7,15 +7,13 @@
 //ピンIDは変更可能です
 const byte U_InitPin = SW_SAFE;
 const byte U_InitPin_Sense=LOW;
-//When U_InitPin status equals this value,IP address is set "192.168.38.7".
-//(This is added Ver0.3 over)
 
 ////////////////////////////////////
 //Node basic infomation
 //ノードの基本情報
 ///////////////////////////////////
 
-const char U_name[] PROGMEM= "M304jp Node v2.21\0";//MAX 20 chars
+const char U_name[] PROGMEM= "DEN-NOH01 v2.22\0";//MAX 20 chars
 const char U_vender[] PROGMEM= "HOLLY&Co.Ltd.\0";//MAX 20 chars
 const char U_uecsid[] PROGMEM= "10100C00000B\0";//12 chars fixed
 const char U_footnote[] PROGMEM= "M304jp UARDECS version\0";
@@ -70,8 +68,16 @@ signed long setONTempFromWeb;
 //UECSSHOWSTRING
 const char NAME3[] PROGMEM= "状態";
 const char NOTE3[] PROGMEM= "RLY7,RLY8</td><tr>\n<tr style=\"background:#888888;\"><td colspan=\"4\">";
+const char SWIN_OPEN[]      PROGMEM= "OPEN RLY7,8(BREAK,MAKE)";
+const char SWIN_CLOSE[]     PROGMEM= "CLOSE RLY7,8(MAKE,BREAK)";
+const char SWIN_STOP[]      PROGMEM= "STOP RLY7,8(BREAK,BREAK)";
 const char SHOWSTRING_OFF[] PROGMEM= "OUTPUT:OFF";
 const char SHOWSTRING_ON [] PROGMEM= "OUTPUT:ON";
+const char *TEMPstatus[3] ={
+  SWIN_OPEN,
+  SWIN_CLOSE,
+  SWIN_STOP
+};
 const char *stringSHOW[2]={
   SHOWSTRING_OFF,
   SHOWSTRING_ON,
@@ -261,7 +267,7 @@ struct UECSUserHtml U_html[U_HtmlLine]={
    -100,
    1000,
    DECIMAL_DIGIT},
-  {NAME3,  UECSSHOWSTRING,NONES  ,NOTE3 ,stringSHOW  ,2 , &(showValueStatusTemp)  , 0, 0, DECIMAL_DIGIT_0},
+  {NAME3,  UECSSHOWSTRING,NONES  ,NOTE3 ,TEMPstatus  ,3 , &(showValueStatusTemp)  , 0, 0, DECIMAL_DIGIT_0},
   {NAME4,  UECSSHOWDATA  ,UNIT4  ,NOTE4 ,DUMMY       ,           0 , &(showValueHumidity)  , 0, 0, DECIMAL_DIGIT_0},
   {NAME5,  UECSSELECTDATA,NONES  ,NOTE5 ,stringSELECT_Humidity , 3 , &(setONOFFAUTO_Humidity)  , 0, 0, DECIMAL_DIGIT_0},
   {NAME6,  UECSINPUTDATA ,UNIT6  ,NOTE6 ,DUMMY       ,0 , &(setONHumidityFromWeb) , 10, 100, DECIMAL_DIGIT_0},

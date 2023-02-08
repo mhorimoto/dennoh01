@@ -232,7 +232,7 @@ void Operation(){
   showValueTemp = U_ccmList[CCMID_InAirTemp].value;
   switch(setONOFFAUTO_Temp) {
   case 0: // Force SideWindow Motor STOP
-    U_ccmList[CCMID_CndInAirTemp].value=0;
+    U_ccmList[CCMID_CndInAirTemp].value=2;
     sidewindow(0);
     break;
   case 1: // Force SideWindow Motor CLOSE
@@ -240,7 +240,7 @@ void Operation(){
     sidewindow(1);
     break;
   case 2: // Force SideWindow Motor OPEN
-    U_ccmList[CCMID_CndInAirTemp].value=2;
+    U_ccmList[CCMID_CndInAirTemp].value=0;
     sidewindow(2);
     break;
   case 3: // Auto mode
@@ -249,10 +249,10 @@ void Operation(){
         U_ccmList[CCMID_CndInAirTemp].value=1;
         sidewindow(1);
       } else if (showValueTemp > (setONTempFromWeb+100)) { // temperature is hot then windows open.
-        U_ccmList[CCMID_CndInAirTemp].value=2;
+        U_ccmList[CCMID_CndInAirTemp].value=0;
         sidewindow(2);
       } else { // temperature is normal windows is stop.
-        U_ccmList[CCMID_CndInAirTemp].value=0;
+        U_ccmList[CCMID_CndInAirTemp].value=2;
         sidewindow(0);
       }
       break;
