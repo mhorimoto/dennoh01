@@ -13,7 +13,7 @@ const byte U_InitPin_Sense=LOW;
 //ノードの基本情報
 ///////////////////////////////////
 
-const char U_name[] PROGMEM= "DEN-NOH01 v2.22\0";//MAX 20 chars
+const char U_name[] PROGMEM= "DEN-NOH01 v3.00\0";//MAX 20 chars
 const char U_vender[] PROGMEM= "HOLLY&Co.Ltd.\0";//MAX 20 chars
 const char U_uecsid[] PROGMEM= "10100C00000B\0";//12 chars fixed
 const char U_footnote[] PROGMEM= "M304jp UARDECS version\0";
