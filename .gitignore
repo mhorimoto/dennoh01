@@ -5,4 +5,4 @@
 *.elf
 lowcore/build/*
 main/build/*
-
+3Ddata/*.FCStd1
